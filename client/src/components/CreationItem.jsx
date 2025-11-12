@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
+import Markdown from "react-markdown";
 
 const CreationItem = ({ item = {} }) => {
+  const [expanded, setExpanded] = useState(false);
+
   // Format the type for display (e.g., "blog-title" -> "Blog Title")
   const formatType = (type) => {
     return type
@@ -23,23 +26,53 @@ const CreationItem = ({ item = {} }) => {
   // Build a short content preview to increase card height naturally
   const rawContent = (item?.content ?? "").toString().trim();
   const preview = rawContent
-    ? (rawContent.length > 110 ? rawContent.slice(0, 110) + "…" : rawContent)
+    ? rawContent.length > 110
+      ? rawContent.slice(0, 110) + "…"
+      : rawContent
     : "";
 
   return (
-    <div className="py-4 px-6 w-full bg-white border border-gray-200 rounded-lg cursor-pointer hover:shadow-md transition-shadow">
+    <div
+      onClick={() => setExpanded(!expanded)}
+      className="py-4 px-6 w-full bg-white border border-gray-200 rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+    >
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
-          <h2 className="font-semibold text-gray-800 text-base">{item?.prompt}</h2>
-          <p className="text-gray-500 text-xs mt-1">{formatDate(item?.created_at)}</p>
+          <h2 className="font-semibold text-gray-800 text-base">
+            {item?.prompt}
+          </h2>
+          <p className="text-gray-500 text-xs mt-1">
+            {formatDate(item?.created_at)}
+          </p>
           {preview && (
-            <p className="text-gray-600 text-sm mt-3 leading-relaxed">{preview}</p>
+            <p className="text-gray-600 text-sm mt-3 leading-relaxed">
+              {preview}
+            </p>
           )}
         </div>
         <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-medium rounded-full whitespace-nowrap hover:from-indigo-600 hover:to-purple-700 transition-all self-start">
           {formatType(item?.type || "")}
         </button>
       </div>
+      {expanded && (
+        <div>
+          {item.type === "image" ? (
+            <div>
+              <img
+                src={item.content}
+                alt="image"
+                className="mt-3 w-full max-w-md"
+              />
+            </div>
+          ) : (
+            <div className="mt-3 h-full overflow-y-scroll text-sm text-slate-700">
+              <div className="reset-tw">
+                <Markdown>{item.content}</Markdown>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

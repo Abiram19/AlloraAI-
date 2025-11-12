@@ -4,7 +4,26 @@
 * {
   font-family: "Outfit", sans-serif;
 }
- 
+
 :root {
   --color-primary: #5044e5;
+}
+
+.reset-tw,
+.reset-tw * {
+  all: revert !important;
+}
+
+.cl-drawerRoot {
+  /* Ensure Clerk Drawer sits above app chrome */
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+/* Backdrop/overlay just below the drawer content */
+.cl-drawerBackdrop,
+.cl-drawerOverlay,
+.cl-modalBackdrop,
+.cl-modalOverlay {
+  z-index: 9998 !important;
 }
