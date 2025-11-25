@@ -114,17 +114,17 @@ const WriteArticle = () => {
           <Edit className="w-5 h-5 text-[#4A7AFF]" />
           <h1 className="text-xl font-semibold">Generated Article</h1>
         </div>
-        <div className="flex-1 flex justify-center items-center overflow-y-auto mt-4">
+        <div className="flex-1 flex justify-center overflow-y-auto mt-4">
           {loading ? (
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-gray-400 m-auto">
               Generating your article...
             </div>
           ) : generatedArticle ? (
-            <div className="text-sm text-gray-700 whitespace-pre-wrap p-4">
+            <div className="text-sm text-gray-700 whitespace-pre-wrap p-4 w-full overflow-y-auto">
               {generatedArticle}
             </div>
           ) : (
-            <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
+            <div className="text-sm flex flex-col items-center gap-5 text-gray-400 m-auto">
               <Edit className="w-9 h-9" />
               <p>Enter a topic and click "Generate article" to get started.</p>
             </div>
