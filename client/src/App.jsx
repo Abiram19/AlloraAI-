@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import Layout from "./pages/Layout.jsx";
@@ -10,8 +10,14 @@ import RemoveBackground from "./pages/RemoveBackground.jsx";
 import RemoveObject from "./pages/RemoveObject.jsx";
 import Reviewresume from "./pages/Reviewresume.jsx";
 import Community from "./pages/Community.jsx";
+import { useAuth } from "@clerk/clerk-react";
 
 const z = () => {
+  const { getToken } = useAuth();
+  useEffect(() => {
+    getToken().then((token) => console.log(token));
+  }, []);
+
   return (
     <div>
       <Routes>
