@@ -1,5 +1,6 @@
 import { Image, Sparkles, Hash } from "lucide-react";
 import React, { useState } from "react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 
 const GenerateImages = () => {
   const imageStyles = [
@@ -16,9 +17,56 @@ const GenerateImages = () => {
   const [selectedStyle, setSelectedStyle] = useState("Realistic");
   const [input, setInput] = useState("");
   const [publish, setPublish] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { getToken } = useAuth();
+  const { user } = useUser();
+
+  const plan = user?.publicMetadata?.plan || "free";
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setGeneratedImage("");
+
+    try {
+      const token = await getToken({ skipCache: true });
+      const response = await fetch(
+        "http://localhost:3000/api/ai/generate-image",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ 
+            prompt: `${input} in ${selectedStyle} style`, 
+            publish 
+          }),
+        }
+      );
+
+      const contentType = response.headers.get("content-type") || "";
+      let data;
+      if (contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.warn("Non-JSON response:", text);
+        return alert(text);
+      }
+
+      if (data.success) {
+        setGeneratedImage(data.secure_url);
+      } else {
+        alert(data.message || "Failed to generate image");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while generating the image");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -78,9 +126,14 @@ const GenerateImages = () => {
           </label>
         </div>
 
-        <button className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#00AD25] to-[#04FF50] text-white px-4 py-2 mt-6 text-sm rounded-lg cursor-pointer">
+        <button
+          disabled={loading}
+          className={`w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#00AD25] to-[#04FF50] text-white px-4 py-2 mt-6 text-sm rounded-lg ${
+            loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+          }`}
+        >
           <Image className="w-5" />
-          Generate Image
+          {loading ? "Generating..." : "Generate Image"}
         </button>
       </form>
       {/* Right col */}
@@ -89,13 +142,25 @@ const GenerateImages = () => {
           <Image className="w-5 h-5 text-[#00AD25]" />
           <h1 className="text-xl font-semibold">Generated Image</h1>
         </div>
-        <div className="flex-1 flex justify-center items-center">
-          <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
-            <Image className="w-9 h-9" />
-            <p>
-              Describe your image and click "Generate Image" to get started.
-            </p>
-          </div>
+        <div className="flex-1 flex justify-center items-center overflow-y-auto">
+          {loading ? (
+            <div className="text-sm text-gray-400 m-auto">
+              Generating your image...
+            </div>
+          ) : generatedImage ? (
+            <img
+              src={generatedImage}
+              alt="Generated"
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+          ) : (
+            <div className="text-sm flex flex-col items-center gap-5 text-gray-400 m-auto">
+              <Image className="w-9 h-9" />
+              <p>
+                Describe your image and click "Generate Image" to get started.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

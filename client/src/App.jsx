@@ -13,10 +13,15 @@ import Community from "./pages/Community.jsx";
 import { useAuth } from "@clerk/clerk-react";
 
 const z = () => {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
   useEffect(() => {
-    getToken().then((token) => console.log(token));
-  }, []);
+    if (!isLoaded) return; // wait until Clerk fully loaded to avoid timeout issues
+    getToken()
+      .then((token) => {
+        console.info("[Auth] token prefix:", token?.slice(0, 12));
+      })
+      .catch((e) => console.warn("[Auth] getToken error:", e.message));
+  }, [isLoaded, getToken]);
 
   return (
     <div>
