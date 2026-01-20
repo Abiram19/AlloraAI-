@@ -4,6 +4,7 @@ import {
   generateBlogTitle,
   generateImage,
   removeBackground,
+  updateUserPlan,
 } from "../controllers/aiController.js";
 import { auth } from "../middlewares/auth.js";
 import multer from "multer";
@@ -20,5 +21,6 @@ aiRouter.post("/generate-article", auth, generateArticle);
 aiRouter.post("/generate-blog-title", auth, generateBlogTitle);
 aiRouter.post("/generate-image", auth, generateImage);
 aiRouter.post("/remove-background", auth, upload.single("image"), removeBackground);
+aiRouter.post("/update-plan", auth, updateUserPlan);
 
 export default aiRouter;

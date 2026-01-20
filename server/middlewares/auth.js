@@ -33,7 +33,19 @@ export const auth = async (req, res, next) => {
         .json({ success: false, message: "Unauthorized - No userId" });
     }
 
-    const user = await clerkClient.users.getUser(userId);
+    // For update-plan endpoint, we don't need to fetch user details
+    if (req.path === "/update-plan") {
+      req.auth = { userId };
+      return next();
+    }
+
+    let user;
+    try {
+      user = await clerkClient.users.getUser(userId);
+    } catch (err) {
+      console.error("[Auth] Failed to fetch user from Clerk:", err.message);
+      throw err;
+    }
     
     // Determine plan: prefer Clerk permissions via req.auth.has, else metadata
     const metaPlan = user.publicMetadata?.plan || user.privateMetadata?.plan || "free";

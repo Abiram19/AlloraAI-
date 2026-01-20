@@ -290,39 +290,21 @@ export const removeBackground = async (req, res) => {
       size: req.file.size,
     });
 
-    // Create form data for ClipDrop API
-    const form = new FormData();
-    form.append("image_file", req.file.buffer, {
-      filename: req.file.originalname,
-      contentType: req.file.mimetype,
-    });
-
-    console.log("[removeBackground] Calling ClipDrop API...");
+    // Convert buffer to base64
+    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
     
-    // Call ClipDrop API to remove background
-    const response = await axios.post(
-      "https://clipdrop-api.co/remove-background/v1",
-      form,
-      {
-        headers: {
-          ...form.getHeaders(),
-          "x-api-key": process.env.CLIPDROP_API_KEY,
-        },
-        responseType: "arraybuffer",
-      }
-    );
-
-    console.log("[removeBackground] ClipDrop API successful, uploading to Cloudinary...");
-
-    // Upload the processed image to Cloudinary
-    const base64Image = `data:image/png;base64,${Buffer.from(response.data).toString("base64")}`;
+    console.log("[removeBackground] Uploading to Cloudinary with background removal...");
     
+    // Upload to Cloudinary with AI background removal transformation
     const uploadResult = await cloudinary.uploader.upload(base64Image, {
       folder: "background-removal",
       resource_type: "image",
+      transformation: [
+        { effect: "background_removal" }
+      ]
     });
 
-    console.log("[removeBackground] Cloudinary upload successful:", uploadResult.secure_url);
+    console.log("[removeBackground] Cloudinary processing successful:", uploadResult.secure_url);
 
     // Save to database
     await sql`
@@ -347,6 +329,46 @@ export const removeBackground = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Failed to remove background",
+    });
+  }
+};
+
+export const updateUserPlan = async (req, res) => {
+  try {
+    console.log("[updateUserPlan] Request received", { userId: req.auth?.userId, body: req.body });
+    
+    const { userId } = req.auth || {};
+    const { planId } = req.body;
+
+    if (!userId) {
+      console.error("[updateUserPlan] Missing userId");
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!planId) {
+      console.error("[updateUserPlan] Missing planId");
+      return res.status(400).json({ success: false, message: "planId is required" });
+    }
+
+    console.log("[updateUserPlan] Updating user metadata for userId:", userId, "planId:", planId);
+
+    // Update user metadata in Clerk
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: { plan: planId },
+      privateMetadata: { free_usage: 0 },
+    });
+
+    console.log("[updateUserPlan] User metadata updated successfully");
+
+    res.json({
+      success: true,
+      message: planId === "premium" ? "Subscribed to Premium." : "Switched to Free.",
+    });
+  } catch (error) {
+    console.error("[updateUserPlan] Error:", error.message, error.stack);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update plan",
     });
   }
 };

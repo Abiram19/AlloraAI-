@@ -7,7 +7,10 @@ import connectCloudinary from "./configs/cloudinary.js";
 
 const app = express();
 
-await connectCloudinary();
+// Initialize Cloudinary connection
+connectCloudinary().catch(err => {
+  console.error("Failed to connect to Cloudinary:", err);
+});
 
 app.use(
   cors({
@@ -53,6 +56,15 @@ app.use(
 );
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
 });
