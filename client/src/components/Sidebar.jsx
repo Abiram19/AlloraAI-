@@ -1,6 +1,6 @@
 import React from "react";
 import { useUser } from "@clerk/clerk-react";
-import { Protect, useClerk } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/clerk-react";
 import {
   Image,
   FileText,
@@ -28,6 +28,7 @@ const navItems = [
 const Sidebar = ({ sidebar, setSidebar }) => {
   const { user } = useUser();
   const { signOut, openUserProfile } = useClerk();
+  const plan = user?.publicMetadata?.plan || user?.privateMetadata?.plan || "free";
   return (
     <div
       className={`w-60 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col justify-between max-sm:absolute top-14 bottom-0 ${
@@ -71,10 +72,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
           <div>
             <h1 className="text-sm font-medium">{user?.fullName}</h1>
             <p className="text-xs text-gray-500">
-              <Protect plan="premium" fallback="Free">
-                Premium
-              </Protect>{" "}
-              Plan
+              {plan === "premium" ? "Premium" : "Free"} Plan
             </p>
           </div>
         </div>

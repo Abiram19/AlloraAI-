@@ -10,6 +10,7 @@ import RemoveBackground from "./pages/RemoveBackground.jsx";
 import RemoveObject from "./pages/RemoveObject.jsx";
 import Reviewresume from "./pages/Reviewresume.jsx";
 import Community from "./pages/Community.jsx";
+import Checkout from "./pages/Checkout.jsx";
 import { useAuth } from "@clerk/clerk-react";
 
 const z = () => {
@@ -27,6 +28,7 @@ const z = () => {
     <div>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/ai" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="write-article" element={<WriteArticle />} />

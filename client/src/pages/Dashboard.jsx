@@ -1,11 +1,14 @@
-import { Protect } from "@clerk/clerk-react";
 import { Sparkles, Gem } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
 import CreationItem from "../components/CreationItem";
 import { dummyCreationData } from "../assets/assets";
 
 const Dashboard = () => {
   const [creations, setCreations] = useState([]);
+  const { user, isLoaded } = useUser();
+
+  const plan = user?.publicMetadata?.plan || user?.privateMetadata?.plan || "free";
 
   useEffect(() => {
     setCreations(dummyCreationData);
@@ -28,10 +31,8 @@ const Dashboard = () => {
         <div className="flex justify-between items-center w-72 p-4 bg-white rounded-xl border border-gray-200">
           <div className="text-slate-600">
             <p className="text-sm">Active Plan</p>
-            <h2 className="text-xl font-semibold">
-              <Protect plan="premium" fallback="Free">
-                Premium
-              </Protect>
+            <h2 className="text-xl font-semibold capitalize">
+              {isLoaded ? plan : "Loading..."}
             </h2>
           </div>
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#ec4899] to-[#8b5cf6] text-white flex justify-center items-center">
