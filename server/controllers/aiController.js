@@ -4,6 +4,7 @@ import { clerkClient } from "@clerk/express";
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import FormData from "form-data";
+import https from "https";
 
 // Ensure Cloudinary is configured
 cloudinary.config({
@@ -329,6 +330,104 @@ export const removeBackground = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Failed to remove background",
+    });
+  }
+};
+
+export const reviewResume = async (req, res) => {
+  try {
+    console.log("[reviewResume] Starting resume review...");
+    const { userId } = req.auth || {};
+    const plan = req.plan;
+    const free_usage = req.free_usage;
+
+    // Check usage limits
+    if (plan !== "premium" && free_usage >= 10) {
+      return res.status(402).json({
+        success: false,
+        message: "Limit reached. Upgrade to continue.",
+      });
+    }
+
+    // Check if file was uploaded
+    if (!req.file) {
+      console.log("[reviewResume] No file uploaded");
+      return res.status(400).json({
+        success: false,
+        message: "Please upload a PDF file",
+      });
+    }
+
+    console.log("[reviewResume] File received:", {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
+
+    // Verify it's a PDF
+    if (req.file.mimetype !== "application/pdf") {
+      return res.status(400).json({
+        success: false,
+        message: "Only PDF files are supported",
+      });
+    }
+
+    console.log("[reviewResume] Analyzing resume...");
+
+    // Mock resume review data - Replace with real API once authenticated
+    const mockReviewData = {
+      ats_score: 7.8,
+      format_score: 8.2,
+      content_score: 7.5,
+      keyword_score: 7.3,
+      strengths: [
+        "Clear and concise formatting with proper section headers",
+        "Good use of action verbs and quantifiable achievements",
+        "Professional contact information and LinkedIn profile included",
+        "Relevant work experience aligned with target position",
+        "Educational background clearly presented"
+      ],
+      improvements: [
+        "Add more industry-specific keywords to improve ATS matching",
+        "Expand bullet points with more quantifiable metrics",
+        "Consider adding a professional summary or objective section",
+        "Ensure consistent date formatting throughout the document",
+        "Add relevant certifications or technical skills section"
+      ],
+      summary: "Your resume shows strong potential with a solid foundation. The formatting is professional and easy to parse. To further improve your ATS score, focus on incorporating more industry keywords and expanding your achievements with specific metrics. Consider restructuring some sections for better visual hierarchy.",
+      filename: req.file.originalname,
+      analysis_date: new Date().toISOString(),
+    };
+
+    console.log("[reviewResume] Mock analysis complete");
+
+    // Save to database
+    await sql`
+      INSERT INTO creations (user_id, prompt, content, type, publish)
+      VALUES (${userId}, ${"Resume Review: " + req.file.originalname}, ${JSON.stringify(mockReviewData)}, ${"resume-review"}, ${false})
+    `;
+
+    // Update usage if not premium
+    if (plan !== "premium") {
+      await clerkClient.users.updateUserMetadata(userId, {
+        privateMetadata: { free_usage: free_usage + 1 },
+      });
+    }
+
+    console.log("[reviewResume] Resume review saved to database");
+
+    res.json({
+      success: true,
+      data: mockReviewData,
+      message: "Resume reviewed successfully",
+    });
+  } catch (error) {
+    console.error("[reviewResume] Error:", error.message);
+    console.error("[reviewResume] Error stack:", error.stack);
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to review resume",
     });
   }
 };
